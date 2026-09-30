@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duty Quick Note</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Duty Note">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<style>
+:root{
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#F3F5F8; --panel:#FFFFFF; --ink:#16243A; --muted:#5C6B7A;
+  --navy:#1B4589; --amber:#D9892B; --rule:#DCE2EA; --ok:#2E7D4F; --warn:#B4541A;
+  --font:"Barlow",-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1724; --panel:#172234; --ink:#E6ECF4; --muted:#95A3B5;
+    --navy:#7FA6E8; --amber:#E9A04A; --rule:#2A3950; --ok:#6CC495; --warn:#F09A5E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1724; --panel:#172234; --ink:#E6ECF4; --muted:#95A3B5;
+  --navy:#7FA6E8; --amber:#E9A04A; --rule:#2A3950; --ok:#6CC495; --warn:#F09A5E;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.45}
+main{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+h1{font-size:34px;font-weight:700;letter-spacing:-.01em;margin:0 0 4px;color:var(--navy)}
+.lede{color:var(--muted);margin:0 0 28px;max-width:62ch}
+section{background:var(--panel);border-left:4px solid var(--navy);padding:20px 22px;margin-bottom:18px;border-radius:0 10px 10px 0}
+section h2{font-size:20px;font-weight:600;margin:0 0 4px;display:flex;gap:12px;align-items:baseline}
+section h2 .n{color:var(--amber);font-weight:700;font-variant-numeric:tabular-nums}
+.hint{color:var(--muted);font-size:15px;margin:0 0 14px}
+button,.filebtn{font:inherit;font-weight:600;border:1.5px solid var(--navy);background:transparent;color:var(--navy);padding:10px 16px;border-radius:8px;cursor:pointer;display:inline-block}
+button.primary{background:var(--amber);border-color:var(--amber);color:#1a1206;font-size:18px;padding:13px 22px}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,.filebtn:focus-within,textarea:focus-visible,input:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.filebtn input{position:absolute;opacity:0;width:1px;height:1px}
+.shots{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.shot{display:flex;align-items:center;gap:14px;border:1px solid var(--rule);border-radius:8px;padding:8px}
+.shot img{width:84px;height:60px;object-fit:cover;object-position:center 30%;border-radius:4px;background:#ccc}
+.shot .meta{flex:1;min-width:0}
+.shot .kind{font-weight:600}
+.shot .kind.crew{color:var(--ok)}
+.shot .sub{color:var(--muted);font-size:14px}
+.shot .sub.warn{color:var(--warn)}
+.shot .ctl{display:flex;gap:6px}
+.shot .ctl button{padding:6px 11px;font-size:15px}
+textarea{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:10px;resize:vertical}
+.parsed{margin-top:10px;font-size:15px}
+.parsed div{padding:6px 0;border-top:1px solid var(--rule)}
+.parsed .bad{color:var(--warn)}
+.cols3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media (max-width:700px){.cols3{grid-template-columns:1fr}}
+input.reg{font:inherit;font-weight:600;font-size:16px;width:7.5em;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink);text-transform:uppercase}
+select{font:inherit;font-size:15px;padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);color:var(--ink)}
+label.small{display:block;font-weight:600;font-size:15px;margin-bottom:6px}
+.checks{display:flex;flex-wrap:wrap;gap:18px;margin-top:14px}
+.checks label{display:flex;gap:8px;align-items:center}
+.checks input{width:20px;height:20px;accent-color:var(--navy)}
+details summary{cursor:pointer;font-weight:600;color:var(--navy)}
+.out{margin-top:16px}
+.out img{max-width:100%;border:1px solid var(--rule);border-radius:6px;background:#fff;display:block}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.status{color:var(--muted);font-size:15px;min-height:1.4em}
+.privacy{color:var(--muted);font-size:14px;margin-top:30px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Duty quick note</h1>
+  <p class="lede">Turns your roster screenshots and ATC flight plans into one note page, with labelled blank space for everything you write by hand during the duty.</p>
+
+  <section>
+    <h2><span class="n">1</span>Roster screenshots</h2>
+    <p class="hint">Flight Details for each sector in flying order, taken without scrolling, plus the crew list and any Pax Info screens (put each right after its sector). Screen type and registration are read automatically; correct the registration here if it is wrong and the tool learns the letters.</p>
+    <label class="filebtn">Add screenshots<input id="files" type="file" accept="image/*" multiple></label>
+    <div class="shots" id="shots"></div>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span>ATC flight plans</h2>
+    <p class="hint">Paste one or more FPL messages. They are matched to sectors in order. The REG item names each aircraft.</p>
+    <textarea id="fpl" rows="7" placeholder="(FPL-SXS6EG-IS&#10;-B738/M-…&#10;-LTAI0655&#10;…)"></textarea>
+    <div class="parsed" id="parsed"></div>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span>Handwriting fields</h2>
+    <details>
+      <summary>Edit labels (saved on this iPad)</summary>
+      <div class="cols3" style="margin-top:12px">
+        <div><label class="small" for="dutyLabels">Once per duty</label><textarea id="dutyLabels" rows="5"></textarea></div>
+        <div><label class="small" for="acLabels">Each aircraft</label><textarea id="acLabels" rows="5"></textarea></div>
+        <div><label class="small" for="secLabels">Each sector</label><textarea id="secLabels" rows="5"></textarea></div>
+      </div>
+      <p class="hint" style="margin-top:8px">One label per line. Sector labels fill the space beside the flight card first, the rest go below it.</p>
+      <button id="resetLabels" type="button">Restore default labels</button>
+    </details>
+    <div class="checks">
+      <label><input type="checkbox" id="optCrew" checked>Crew list</label>
+      <label><input type="checkbox" id="optRoute">Full route text</label>
+      <label><input type="checkbox" id="optFir" checked>FIR elapsed times</label>
+    </div>
+  </section>
+
+  <button class="primary" id="make">Create note</button>
+  <div class="out" id="out" hidden>
+    <div class="actions">
+      <button id="share">Share to Notes</button>
+      <button id="copy">Copy image</button>
+    </div>
+    <p class="status" id="status"></p>
+    <img id="result" alt="Generated duty note">
+  </div>
+  <p class="privacy">Everything is processed on this device. Screenshots and flight plans are never uploaded.</p>
+</main>
+
+<script>
+(function(){
+  var DEF_DUTY="Notes";
+  var DEF_AC="MEL / CDL";
+  var DEF_SEC="Pax booked / actual\nCTOT\nDOW / DOI\nOFP / trip fuel / trip time / block\nSSR / DGR";
+  var shots=[];
+  var $=function(id){return document.getElementById(id)};
+  function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+  function initLabels(){
+    $('dutyLabels').value=load('dqn2_duty')!==null?load('dqn2_duty'):DEF_DUTY;
+    $('acLabels').value=load('dqn2_ac')!==null?load('dqn2_ac'):DEF_AC;
+    $('secLabels').value=load('dqn2_sec')!==null?load('dqn2_sec'):DEF_SEC;
+  }
+  initLabels();
+  [['dutyLabels','dqn2_duty'],['acLabels','dqn2_ac'],['secLabels','dqn2_sec']].forEach(function(p){
+    $(p[0]).addEventListener('input',function(){store(p[1],this.value)});
+  });
+  $('resetLabels').onclick=function(){store('dqn2_duty',DEF_DUTY);store('dqn2_ac',DEF_AC);store('dqn2_sec',DEF_SEC);initLabels()};
+  ['optCrew','optRoute','optFir'].forEach(function(id){
+    var v=load('dqn_'+id); if(v!==null) $(id).checked=v==='1';
+    $(id).addEventListener('change',function(){store('dqn_'+id,this.checked?'1':'0')});
+  });
+
+  // ---------- screenshot analysis ----------
+  function isBlue(r,g,b){return b>100&&r<70&&g<115}
+  function analyze(img){
+    var W=img.naturalWidth,H=img.naturalHeight;
+    var c=document.createElement('canvas');c.width=W;c.height=H;
+    var x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,0,0);
+    var d=x.getImageData(0,0,W,H).data;
+    function px(xx,yy){var i=(Math.round(yy)*W+Math.round(xx))*4;return [d[i],d[i+1],d[i+2]]}
+    var res={W:W,H:H};
+    // blue card run in a column inside the card's left padding
+    var cx=0.03*W, top=-1, bot=-1, runTop=-1, runEnd=-1;
+    for(var y=Math.round(0.08*H);y<0.88*H;y++){
+      var p=px(cx,y);
+      if(isBlue(p[0],p[1],p[2])){ if(runTop<0) runTop=y; runEnd=y; }
+      else if(runTop>=0 && y-runEnd>4){
+        if(runEnd-runTop>0.1*H){top=runTop;bot=runEnd;break}
+        runTop=-1;
+      }
+    }
+    if(top<0 && runTop>=0 && runEnd-runTop>0.1*H){top=runTop;bot=runEnd}
+    if(top<0){
+      var tb=findBand(px,W,H,Math.round(0.09*H),Math.round(0.3*H));
+      if(tb&&tb.sel==='pax'){ res.kind='pax'; res.paxRows=paxRows(px,W,H,tb.end); return res; }
+      res.kind='crew'; crewInfo(res,px,W,H); return res;
+    }
+    res.kind='flight'; res.cardTop=top; res.cardBot=bot; res.clipped= top<0.13*H;
+    // divider line inside card (skips Jump Seat button)
+    var div=-1;
+    for(var y2=Math.round(top+0.4*(bot-top));y2<bot;y2++){
+      var a=px(0.5*W,y2), b2=px(0.3*W,y2);
+      if(a[0]>100&&a[0]<200&&a[2]>180&&b2[0]>100&&b2[0]<200&&b2[2]>180){div=y2;break}
+    }
+    res.cardEnd= div>0? div-2 : bot;
+    // grey tab band (Flight Info / Crew Info / Pax Info)
+    var bandTop=-1,bandEnd=-1;
+    for(var y3=bot+3;y3<Math.min(H*0.9,bot+0.15*H);y3++){
+      var q=px(0.9*W,y3), grey=q[0]>222&&q[0]<245&&q[2]>228&&q[2]<250&&!(q[0]>250);
+      if(grey){ if(bandTop<0) bandTop=y3; bandEnd=y3; }
+      else if(bandTop>=0){ if(bandEnd-bandTop>0.02*H) break; bandTop=-1; }
+    }
+    var k=H/2360;
+    if(bandTop>=0){
+      var tb2=tabSel(px,W,bandTop+14);
+      if(tb2==='pax'){ res.paxRows=paxRows(px,W,H,bandEnd); res.timesOk=false; res.sig=regSig(px,W,H,top); return res; }
+    }
+    var t0 = bandTop>=0 ? bandEnd+46*k : bot+227*k;
+    res.timesTop=t0; res.timesEnd=Math.min(t0+265*k, 0.875*H);
+    res.timesOk = res.timesEnd-res.timesTop > 200*k;
+    res.sig=regSig(px,W,H,top);
+    return res;
+  }
+  function regSig(px,W,H,top){
+    var sig=[], ry0=top+0.060*H, ry1=top+0.095*H, rx0=0.05*W, rx1=0.30*W;
+    for(var gy=0;gy<8;gy++) for(var gx=0;gx<48;gx++){
+      var cnt=0,tot=0;
+      for(var sy=0;sy<4;sy++) for(var sx=0;sx<4;sx++){
+        var pp=px(rx0+(gx+sx/4)*(rx1-rx0)/48, ry0+(gy+sy/4)*(ry1-ry0)/8);
+        tot++; if(pp[0]>100&&pp[1]>150) cnt++;
+      }
+      sig.push(cnt/tot>0.15?1:0);
+    }
+    return sig;
+  }
+  function isBandGrey(q){return q[0]>222&&q[0]<245&&q[2]>228&&q[2]<250}
+  function tabSel(px,W,y){
+    var pos=[['flight',0.06],['crew',0.40],['pax',0.72]];
+    for(var i=0;i<3;i++){var q=px(pos[i][1]*W,y);if(q[0]>250&&q[1]>250&&q[2]>250) return pos[i][0]}
+    return null;
+  }
+  function findBand(px,W,H,y0,y1){
+    var bt=-1,be=-1;
+    for(var y=y0;y<y1;y++){
+      if(isBandGrey(px(0.03*W+20,y))){ if(bt<0) bt=y; be=y; }
+      else if(bt>=0){ if(be-bt>0.03*H) break; bt=-1; }
+    }
+    if(bt<0||be-bt<0.03*H) return null;
+    return {top:bt,end:be,sel:tabSel(px,W,bt+14)};
+  }
+  // Pax Info list: split on row separators, drop rows whose value is only a dash
+  function paxRows(px,W,H,start){
+    var seps=[],limit=Math.round(0.87*H);
+    function isSep(p){return p[0]>=244&&p[0]<=252&&p[2]>=249&&p[2]-p[0]>=2}
+    for(var y=start+4;y<limit;y++){
+      if(isSep(px(0.47*W,y))&&isSep(px(0.49*W,y))){ if(!seps.length||y-seps[seps.length-1]>6) seps.push(y); }
+    }
+    // end of the list card: last dark pixel after the final separator
+    var lastInk=seps.length?seps[seps.length-1]:start;
+    for(var y2=lastInk+4;y2<limit;y2+=2){
+      for(var x2=0.04*W;x2<0.93*W;x2+=4){var p=px(x2,y2);if(p[0]+p[1]+p[2]<600){lastInk=y2;break}}
+    }
+    var bounds=[start+8].concat(seps).concat([Math.min(lastInk+36,limit)]), rows=[];
+    for(var i=0;i<bounds.length-1;i++){
+      var a=bounds[i]+2,b=bounds[i+1]-1; if(b-a<0.02*H) continue;
+      var minX=1e9,maxX=-1,minY=1e9,maxY=-1,labelInk=false;
+      for(var yy=a;yy<b;yy+=2){
+        for(var xx=0.50*W;xx<0.93*W;xx+=2){var q=px(xx,yy);if(q[0]+q[1]+q[2]<600){if(xx<minX)minX=xx;if(xx>maxX)maxX=xx;if(yy<minY)minY=yy;if(yy>maxY)maxY=yy}}
+        if(!labelInk) for(var xl=0.04*W;xl<0.45*W;xl+=4){var r=px(xl,yy);if(r[0]+r[1]+r[2]<300){labelInk=true;break}}
+      }
+      if(!labelInk) continue;
+      var dash= maxX<0 || ((maxX-minX)<0.025*W && (maxY-minY)<0.012*H);
+      if(!dash) rows.push({y:a,h:b-a});
+    }
+    return rows;
+  }
+  function crewInfo(res,px,W,H){
+    // vertical content extent in the name column
+    var y0=Math.round(0.115*H), y1=Math.round(0.88*H), first=-1,last=-1;
+    for(var y=y0;y<y1;y+=2){
+      for(var xx=0.14*W;xx<0.6*W;xx+=6){var p=px(xx,y); if(p[0]+p[1]+p[2]<600){ if(first<0) first=y; last=y; break; }}
+    }
+    res.crewTop=first<0?y0:first-12; res.crewEnd=last<0?y1:last+14;
+  }
+  function sigDiff(a,b){var n=0;for(var i=0;i<a.length;i++) if(a[i]!==b[i]) n++;return n/a.length}
+
+  function addFile(file){
+    return new Promise(function(res){
+      var url=URL.createObjectURL(file), img=new Image();
+      img.onload=function(){
+        var a=analyze(img);
+        var o=a.kind==='flight'?readReg(img,a):null;
+        shots.push({img:img,url:url,a:a,kind:a.kind,ac:null,ocr:o,reg:'',regManual:'',sector:0,secManual:false});
+        res();
+      };
+      img.onerror=function(){res()};
+      img.src=url;
+    });
+  }
+  function addFiles(list){
+    list.reduce(function(p,f){return p.then(function(){return addFile(f)})},Promise.resolve()).then(function(){assignAircraft();renderShots()});
+  }
+  $('files').addEventListener('change',function(){addFiles(Array.prototype.slice.call(this.files));this.value=''});
+  document.addEventListener('paste',function(e){
+    var items=(e.clipboardData&&e.clipboardData.items)||[],got=[];
+    for(var i=0;i<items.length;i++) if(items[i].type.indexOf('image')===0) got.push(items[i].getAsFile());
+    if(got.length){e.preventDefault();addFiles(got)}
+  });
+
+  // ---------- registration reading ----------
+  // Reads the light-blue registration line on the flight card by matching each letter
+  // against glyphs drawn in the iPad's own system font, plus letters learned from
+  // registrations you confirmed earlier.
+  var GW=12,GH=16,CHARS='ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  var fontTpl=null, learned={};
+  try{learned=JSON.parse(load('dqn_glyphs')||'{}')}catch(e){learned={}}
+  function feat(getV,x0,y0,w,h){
+    var v=[];
+    for(var gy=0;gy<GH;gy++)for(var gx=0;gx<GW;gx++){
+      var s0=0,n=0;
+      for(var sy=0;sy<3;sy++)for(var sx=0;sx<3;sx++){s0+=getV(x0+(gx+(sx+.5)/3)*w/GW,y0+(gy+(sy+.5)/3)*h/GH);n++}
+      v.push(Math.round(s0/n*9));
+    }
+    return {v:v,ar:w/h};
+  }
+  function buildFontTpl(){
+    if(fontTpl) return fontTpl;
+    fontTpl={};
+    var c=document.createElement('canvas');c.width=160;c.height=160;
+    var x=c.getContext('2d',{willReadFrequently:true});
+    CHARS.split('').forEach(function(ch){
+      x.fillStyle='#000';x.fillRect(0,0,160,160);x.fillStyle='#fff';
+      x.font='400 100px -apple-system,"SF Pro Text","SF Pro Display",system-ui,"Helvetica Neue",Arial,sans-serif';
+      x.textBaseline='alphabetic';x.fillText(ch,30,125);
+      var d=x.getImageData(0,0,160,160).data,x0=160,x1=-1,y0=160,y1=-1;
+      for(var yy=0;yy<160;yy++)for(var xx=0;xx<160;xx++){if(d[(yy*160+xx)*4]>90){if(xx<x0)x0=xx;if(xx>x1)x1=xx;if(yy<y0)y0=yy;if(yy>y1)y1=yy}}
+      var gv=function(px_,py_){var i=(Math.floor(py_)*160+Math.floor(px_))*4;return d[i]/255};
+      fontTpl[ch]=feat(gv,x0,y0,x1-x0+1,y1-y0+1);
+    });
+    return fontTpl;
+  }
+  function score(a,b){
+    var s1=0;for(var i=0;i<a.v.length;i++) s1+=Math.abs(a.v[i]-b.v[i]);
+    return s1/(a.v.length*9)+0.35*Math.abs(Math.log(a.ar/b.ar));
+  }
+  function readReg(img,a){
+    var W=img.naturalWidth,H=img.naturalHeight;
+    var rx0=Math.round(0.045*W),rx1=Math.round(0.45*W),ry0=Math.round(a.cardTop+0.052*H),ry1=Math.round(a.cardTop+0.102*H);
+    var w=rx1-rx0,h=ry1-ry0;
+    var c=document.createElement('canvas');c.width=w;c.height=h;
+    var x=c.getContext('2d',{willReadFrequently:true});x.drawImage(img,rx0,ry0,w,h,0,0,w,h);
+    var d=x.getImageData(0,0,w,h).data;
+    var val=new Float32Array(w*h),mask=new Uint8Array(w*h);
+    for(var i=0;i<w*h;i++){var g=d[i*4+1];var v=(g-75)/(195-75);v=v<0?0:v>1?1:v;val[i]=v;mask[i]=v>0.45?1:0}
+    // pick the text line with the most ink
+    var rows=[];for(var yy=0;yy<h;yy++){var n=0;for(var xx=0;xx<w;xx++)n+=mask[yy*w+xx];rows.push(n)}
+    var best=null,cur=null;
+    rows.forEach(function(n,yy){if(n>0){if(!cur)cur={a:yy,b:yy,ink:0};cur.b=yy;cur.ink+=n}else if(cur){if(!best||cur.ink>best.ink)best=cur;cur=null}});
+    if(cur&&(!best||cur.ink>best.ink))best=cur;
+    if(!best||best.b-best.a<8) return null;
+    // connected components inside that line
+    var lab=new Int32Array(w*h),comps=[],id=0;
+    for(var y2=best.a;y2<=best.b;y2++)for(var x2=0;x2<w;x2++){
+      var p=y2*w+x2;if(!mask[p]||lab[p])continue;
+      id++;var st=[p],cmp={x0:x2,x1:x2,y0:y2,y1:y2,n:0};lab[p]=id;
+      while(st.length){var q=st.pop(),qx=q%w,qy=(q-qx)/w;cmp.n++;
+        if(qx<cmp.x0)cmp.x0=qx;if(qx>cmp.x1)cmp.x1=qx;if(qy<cmp.y0)cmp.y0=qy;if(qy>cmp.y1)cmp.y1=qy;
+        for(var dy=-1;dy<=1;dy++)for(var dx=-1;dx<=1;dx++){var nx=qx+dx,ny=qy+dy;if(nx<0||ny<best.a||nx>=w||ny>best.b)continue;var r=ny*w+nx;if(mask[r]&&!lab[r]){lab[r]=id;st.push(r)}}}
+      if(cmp.n>12)comps.push(cmp);
+    }
+    if(!comps.length) return null;
+    comps.sort(function(p,q){return p.x0-q.x0});
+    var capH=Math.max.apply(null,comps.map(function(c2){return c2.y1-c2.y0+1}));
+    // stop at a wide gap (end of the registration)
+    var glyphs=[comps[0]];
+    for(var k=1;k<comps.length;k++){if(comps[k].x0-comps[k-1].x1>capH*1.2)break;glyphs.push(comps[k])}
+    glyphs=glyphs.filter(function(g2){return (g2.y1-g2.y0+1)>capH*0.6});
+    if(glyphs.length<3||glyphs.length>8) return null;
+    var tpl=buildFontTpl(),feats=[],table=[];
+    glyphs.forEach(function(g2){
+      var gv=function(px_,py_){var ix=Math.min(w-1,Math.floor(px_)),iy=Math.min(h-1,Math.floor(py_));return lab[iy*w+ix]?val[iy*w+ix]:0};
+      var f=feat(gv,g2.x0,g2.y0,g2.x1-g2.x0+1,g2.y1-g2.y0+1);feats.push(f);
+      var sc={};
+      CHARS.split('').forEach(function(ch){sc[ch]=score(f,tpl[ch])});
+      Object.keys(learned).forEach(function(ch){learned[ch].forEach(function(t){var v=score(f,t)*0.7;if(v<sc[ch])sc[ch]=v})});
+      table.push(sc);
+    });
+    var pick=table.map(function(sc){
+      var b=null;Object.keys(sc).forEach(function(ch){if(b===null||sc[ch]<sc[b])b=ch});
+      // registrations are mostly letters: prefer a close letter over a digit
+      if(/\d/.test(b)){var bl=null;Object.keys(sc).forEach(function(ch){if(/[A-Z]/.test(ch)&&(bl===null||sc[ch]<sc[bl]))bl=ch});if(bl&&sc[bl]<sc[b]+0.03)b=bl}
+      return b;
+    });
+    // nationality prefix: accept a known prefix if it costs little more than the raw reading
+    var PREFIX=['TC','D','9H','OE','G','EI','LZ','YL','SP','OY','SE','LN','OH','ES','HB','F','EC','CS','PH','OO','LX','SX','YR','HA','OM','OK','S5','9A','LY','ER','UR','4X','A6','A7','I','N'];
+    var bestP=null,bestExtra=1e9;
+    PREFIX.forEach(function(P){
+      if(P.length>=table.length) return;
+      var extra=0;for(var i=0;i<P.length;i++){if(!(P[i] in table[i]))return;extra+=table[i][P[i]]-table[i][pick[i]]}
+      if(extra<0.07*P.length&&extra<bestExtra){bestExtra=extra;bestP=P}
+    });
+    if(bestP) for(var i2=0;i2<bestP.length;i2++) pick[i2]=bestP[i2];
+    var text=pick.join(''),worst=0;
+    pick.forEach(function(ch,i3){if(table[i3][ch]>worst)worst=table[i3][ch]});
+    return {text:text,feats:feats,conf:worst};
+  }
+  function learn(feats,text){
+    if(!feats||feats.length!==text.length) return;
+    text.split('').forEach(function(ch,i){
+      if(CHARS.indexOf(ch)<0) return;
+      var L=learned[ch]||(learned[ch]=[]);
+      if(L.some(function(t){return score(t,feats[i])<0.04})) return;
+      L.unshift(feats[i]);if(L.length>3)L.length=3;
+    });
+    store('dqn_glyphs',JSON.stringify(learned));
+  }
+  function nearlySame(a,b){if(!a||!b||a.length!==b.length)return false;var d=0;for(var i=0;i<a.length;i++)if(a[i]!==b[i])d++;return d<=1}
+
+  // Aircraft grouping by registration: your correction, then FPL REG, then the card
+  function effReg(s,i,fpls){
+    if(s.regManual) return s.regManual;
+    var f=fpls[i];
+    if(f&&!f.bad&&f.reg){
+      if(s.ocr&&!s.learnedFrom&&nearlySame(s.ocr.text,f.reg)){learn(s.ocr.feats,f.reg);s.learnedFrom=f.reg}
+      return f.reg;
+    }
+    return s.ocr?s.ocr.text:'';
+  }
+  function assignAircraft(){
+    var fpls=parseAll($('fpl').value), flights=shots.filter(function(s){return s.kind==='flight'});
+    var groups=[];
+    flights.forEach(function(s,i){
+      var reg=effReg(s,i,fpls);s.reg=reg;
+      if(reg){s.ac='reg:'+reg;return}
+      var idx=-1;
+      groups.forEach(function(g,gi){if(idx<0&&s.a.sig&&sigDiff(g.sig,s.a.sig)<0.06)idx=gi});
+      if(idx<0){idx=groups.length;groups.push({sig:s.a.sig})}
+      s.ac='sig:'+idx;
+    });
+  }
+  function sectorOptions(cur){
+    var n=shots.filter(function(x){return x.kind==='flight'}).length,o='';
+    for(var i=0;i<Math.max(n,1);i++) o+='<option value="'+i+'"'+(cur===i?' selected':'')+'>For sector '+(i+1)+'</option>';
+    return o;
+  }
+  function renderShots(){
+    var fc=-1; shots.forEach(function(x){ if(x.kind==='flight') fc++; else if(x.kind==='pax'&&!x.secManual) x.sector=Math.max(fc,0); });
+    var box=$('shots');box.innerHTML='';var fn=0;
+    shots.forEach(function(s,i){
+      var fl=s.kind==='flight';
+      if(fl) ++fn;
+      var label=fl?'Sector '+fn:(s.kind==='pax'?'Pax info':'Crew list');
+      var sub=s.kind==='pax'?(s.a.paxRows.length+' rows kept, empty ones dropped'):fl?(s.a.paxRows?'Pax info shown, times not included':s.a.clipped?'Card is partly hidden: take it without scrolling':(!s.a.timesOk?'Times rows not found':'Flight Details')):'Crew';
+      var warn=fl&&(s.a.clipped||!s.a.timesOk);
+      var row=document.createElement('div');row.className='shot';
+      row.innerHTML='<img alt=""><div class="meta"><div class="kind '+s.kind+'">'+label+'</div><div class="sub'+(warn?' warn':'')+'">'+sub+'</div></div>'+
+        (s.kind==='pax'?'<select aria-label="Sector">'+sectorOptions(s.sector)+'</select>':'')+
+        (fl?'<input class="reg" aria-label="Registration" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="Reg" value="'+(s.reg||'')+'">':'')+
+        '<div class="ctl"><button aria-label="Move up">↑</button><button aria-label="Move down">↓</button><button aria-label="Remove">✕</button></div>';
+      row.querySelector('img').src=s.url;
+      var sel=row.querySelector('select'); if(sel) sel.onchange=function(){s.sector=parseInt(this.value,10);s.secManual=true};
+      var ri=row.querySelector('input.reg');
+      if(ri) ri.onchange=function(){
+        var v=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+        s.regManual=v; if(v&&s.ocr) learn(s.ocr.feats,v);
+        assignAircraft();renderShots();
+      };
+      var b=row.querySelectorAll('.ctl button');
+      b[0].onclick=function(){if(i>0){shots.splice(i-1,0,shots.splice(i,1)[0]);assignAircraft();renderShots()}};
+      b[1].onclick=function(){if(i<shots.length-1){shots.splice(i+1,0,shots.splice(i,1)[0]);assignAircraft();renderShots()}};
+      b[2].onclick=function(){URL.revokeObjectURL(s.url);shots.splice(i,1);assignAircraft();renderShots()};
+      box.appendChild(row);
+    });
+  }
+
+  // ---------- FPL parsing ----------
+  var KEYS=['STS','PBN','NAV','COM','DAT','SUR','DEP','DEST','DOF','REG','EET','SEL','TYP','CODE','DLE','OPR','ORGN','PER','ALTN','RALT','TALT','RIF','RMK','RVR'];
+  var MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  function hm(s){return s?(parseInt(s.slice(0,2),10)+':'+s.slice(2,4)):''}
+  function parseOne(raw){
+    var s=raw.replace(/[()]/g,' ').replace(/\s+/g,' ').trim();
+    var parts=s.split('-').map(function(t){return t.trim()}), di=-1;
+    for(var i=1;i<parts.length;i++){if(/^[A-Z]{4}\d{4}$/.test(parts[i])){di=i;break}}
+    if(di<0||!parts[di+2]) return null;
+    var f={callsign:parts[1]||'',type:(parts[di-2]||'').split('/')[0].replace(/^\d+/,'')};
+    f.dep=parts[di].slice(0,4);f.eobt=parts[di].slice(4);f.route=parts[di+1];
+    var d=parts[di+2].match(/^([A-Z]{4})(\d{4})(?:\s+([A-Z]{4}))?(?:\s+([A-Z]{4}))?/);
+    if(!d) return null;
+    f.dest=d[1];f.eet=d[2];f.altn=[d[3],d[4]].filter(Boolean);
+    var other=parts.slice(di+3).join('-'),items={},m;
+    var re=new RegExp('(?:^|\\s)('+KEYS.join('|')+')\\/(.*?)(?=\\s(?:'+KEYS.join('|')+')\\/|$)','g');
+    while((m=re.exec(other))) items[m[1]]=m[2].trim();
+    f.items=items;
+    var lv=f.route.match(/^[NMK]\d{3,4}(F\d{3}|S\d{4}|A\d{3}|VFR)/);
+    f.levels=[];if(lv) f.levels.push({lvl:lv[1]});
+    var cre=/(\S+?)\/[NMK]\d{3,4}(F\d{3}|S\d{4}|A\d{3})/g,c;
+    while((c=cre.exec(f.route))) f.levels.push({lvl:c[2],at:c[1]});
+    f.firs=(items.EET||'').split(' ').map(function(t){var x=t.match(/^(\S+?)(\d{4})$/);return x?{fir:x[1],t:x[2]}:null}).filter(Boolean);
+    if(items.DOF&&/^\d{6}$/.test(items.DOF)){var y=items.DOF;f.date=parseInt(y.slice(4,6),10)+' '+MON[parseInt(y.slice(2,4),10)-1]+' 20'+y.slice(0,2)}
+    f.reg=(items.REG||'').split(' ')[0];
+    return f;
+  }
+  function parseAll(text){
+    var t=text.trim();if(!t) return [];
+    var chunks=t.indexOf('(FPL')>=0?t.split('(FPL').slice(1).map(function(c){return '(FPL'+c}):[t];
+    return chunks.map(function(c){return parseOne(c)||{bad:true}});
+  }
+  function showParsed(){
+    var list=parseAll($('fpl').value),box=$('parsed');box.innerHTML='';
+    list.forEach(function(f,i){
+      var d=document.createElement('div');
+      if(f.bad){d.className='bad';d.textContent='Plan '+(i+1)+': could not read this message. Check it starts with (FPL and is complete.'}
+      else d.textContent='Plan '+(i+1)+': '+f.callsign+'  '+f.dep+' to '+f.dest+', EET '+hm(f.eet)+(f.altn.length?', alternate '+f.altn.join(' '):'')+(f.reg?', '+f.reg:'');
+      box.appendChild(d);
+    });
+    assignAircraft();renderShots();
+  }
+  $('fpl').addEventListener('input',showParsed);
+
+  // ---------- rendering ----------
+  var W=1200,M=36,GAP=28;
+  var C={ink:'#14223A',navy:'#1B4589',label:'#3E4C5E',line:'#B9C3D0',rule:'#9AA7B8',amber:'#C97A1E',soft:'#EEF2F7'};
+  var FONT='"Barlow",-apple-system,Helvetica,Arial,sans-serif';
+  var LABEL='600 32px '+FONT;
+
+  function wrap(ctx,text,maxW){
+    var words=text.split(' '),lines=[],cur='';
+    words.forEach(function(w){var t=cur?cur+' '+w:w;if(ctx.measureText(t).width>maxW&&cur){lines.push(cur);cur=w}else cur=t});
+    if(cur) lines.push(cur);return lines;
+  }
+  function field(ctx,label,x,y,w,h,draw){
+    ctx.font=LABEL;var lines=wrap(ctx,label,w);
+    if(!draw) return;
+    ctx.fillStyle=C.label;ctx.textBaseline='top';
+    lines.forEach(function(l,i){ctx.fillText(l,x,y+i*38)});
+    ctx.strokeStyle=C.line;ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(x,y+h-10);ctx.lineTo(x+w,y+h-10);ctx.stroke();
+  }
+  function textBlock(ctx,lines,x,y,maxW,draw){
+    lines.forEach(function(L){
+      ctx.font=L.font;
+      wrap(ctx,L.t,maxW).forEach(function(s){if(draw){ctx.fillStyle=L.color;ctx.textBaseline='top';ctx.fillText(s,x,y)}y+=L.lh});
+      y+=L.gap||0;
+    });
+    return y;
+  }
+  function fplLines(f,o){
+    var L=[];
+    L.push({t:f.callsign+'   '+f.type+'   '+f.dep+' '+f.eobt+' to '+f.dest+'   EET '+hm(f.eet)+(f.altn.length?'   ALTN '+f.altn.join(' '):''),font:'700 38px '+FONT,color:C.navy,lh:48,gap:4});
+    if(f.levels.length) L.push({t:'Levels  '+f.levels.map(function(l){return l.lvl+(l.at?' at '+l.at:'')}).join(',  '),font:'500 34px '+FONT,color:C.ink,lh:44,gap:2});
+    if(o.fir&&f.firs.length) L.push({t:'FIR  '+f.firs.map(function(x){return x.fir+' '+hm(x.t)}).join('   '),font:'500 34px '+FONT,color:C.ink,lh:44,gap:2});
+    var extra=[];
+    if(f.items.SEL) extra.push('SELCAL '+f.items.SEL);
+    if(f.items.RALT) extra.push('ERA '+f.items.RALT);
+    if(f.items.TALT) extra.push('TO ALTN '+f.items.TALT);
+    if(extra.length) L.push({t:extra.join('     '),font:'500 34px '+FONT,color:C.ink,lh:44,gap:2});
+    if(o.route) L.push({t:f.route,font:'400 29px '+FONT,color:C.label,lh:38,gap:2});
+    return L;
+  }
+  // Pre-built crops
+  function cardCanvas(s){
+    var a=s.a,img=s.img,k=a.W;
+    var sx=0.0207*k,sw=(0.9793-0.0207)*k;
+    var c=document.createElement('canvas');c.width=Math.round(sw);c.height=Math.round(a.cardEnd-a.cardTop);
+    c.getContext('2d').drawImage(img,sx,a.cardTop,sw,c.height,0,0,c.width,c.height);
+    return c;
+  }
+  function paxCanvas(s){
+    var rows=s.a.paxRows; if(!rows||!rows.length) return null;
+    var W0=s.a.W,l0=0.03*W0,lw=0.41*W0,v0=0.49*W0,vw=0.44*W0,h=rows.reduce(function(t,r){return t+r.h},0);
+    var c=document.createElement('canvas');c.width=Math.round(lw+vw);c.height=Math.round(h);
+    var x=c.getContext('2d',{willReadFrequently:true}),y=0;x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);
+    rows.forEach(function(r){x.drawImage(s.img,l0,r.y,lw,r.h,0,y,lw,r.h);x.drawImage(s.img,v0,r.y,vw,r.h,lw,y,vw,r.h);y+=r.h});
+    // remove the app's edge shadow: flatten near-white pixels
+    var id=x.getImageData(0,0,c.width,c.height),d=id.data;
+    for(var i=0;i<d.length;i+=4){if(d[i]>222&&d[i+1]>222&&d[i+2]>222){d[i]=d[i+1]=d[i+2]=255}}
+    x.putImageData(id,0,0);
+    return c;
+  }
+  function timesCanvas(s){
+    var a=s.a; if(!a.timesOk) return null;
+    var sx=0.03*a.W,sw=0.70*a.W,sh=a.timesEnd-a.timesTop;
+    var c=document.createElement('canvas');c.width=Math.round(sw);c.height=Math.round(sh);
+    c.getContext('2d').drawImage(s.img,sx,a.timesTop,sw,sh,0,0,c.width,c.height);
+    return c;
+  }
+  function crewCanvas(s){
+    // stitch name column + role badges, then squeeze vertical white space
+    var a=s.a,W0=a.W,y0=a.crewTop,h=a.crewEnd-a.crewTop;
+    var n0=0.035*W0,nw=0.565*W0,b0=0.83*W0,bw=0.15*W0;
+    var st=document.createElement('canvas');st.width=Math.round(nw+bw);st.height=Math.round(h);
+    var x=st.getContext('2d',{willReadFrequently:true});x.fillStyle='#fff';x.fillRect(0,0,st.width,st.height);
+    x.drawImage(s.img,n0,y0,nw,h,0,0,nw,h);x.drawImage(s.img,b0,y0,bw,h,nw,0,bw,h);
+    var d=x.getImageData(0,0,st.width,st.height).data,ink=[];
+    for(var y=0;y<st.height;y++){var on=false;for(var xx=0;xx<st.width;xx+=3){var i=(y*st.width+xx)*4;if(d[i]+d[i+1]+d[i+2]<740){on=true;break}}ink.push(on)}
+    var segs=[],cur=null,MAXG=Math.round(22*W0/1640);
+    var y=0;
+    while(y<ink.length){
+      var s0=y,v=ink[y];while(y<ink.length&&ink[y]===v)y++;
+      segs.push({y:s0,h:y-s0,ink:v});
+    }
+    // drop the "Crew (n) / View Detail" header line (it contains blue link text in the badge column)
+    var firstInk=segs.findIndex(function(g){return g.ink});
+    if(firstInk>=0){
+      var g0=segs[firstInk],blue=false;
+      for(var yy=g0.y;yy<g0.y+g0.h&&!blue;yy+=2)for(var xb=Math.round(nw);xb<st.width;xb+=3){var j=(yy*st.width+xb)*4;if(d[j+2]>120&&d[j]<90){blue=true;break}}
+      if(blue) segs.splice(0,firstInk+1);
+    }
+    var outH=segs.reduce(function(t,g){return t+(g.ink?g.h:Math.min(g.h,MAXG))},0);
+    var out=document.createElement('canvas');out.width=st.width;out.height=outH;
+    var ox=out.getContext('2d');ox.fillStyle='#fff';ox.fillRect(0,0,out.width,out.height);
+    var oy=0;segs.forEach(function(g){var hh=g.ink?g.h:Math.min(g.h,MAXG);if(g.ink)ox.drawImage(st,0,g.y,st.width,g.h,0,oy,st.width,g.h);oy+=hh});
+    return out;
+  }
+  function blit(ctx,c,x,y,dw,draw){var dh=c.height*dw/c.width;if(draw)ctx.drawImage(c,x,y,dw,dh);return dh}
+
+  function render(ctx,draw,data){
+    var y=M,o=data.opts,fpls=data.fpls;
+    // Title
+    var good=fpls.filter(function(f){return !f.bad}), title=[], chain=[];
+    if(good[0]&&good[0].date) title.push(good[0].date);
+    good.forEach(function(f){if(!chain.length) chain.push(f.dep);chain.push(f.dest)});
+    if(chain.length) title.push(chain.join('–'));
+    if(title.length){
+      ctx.font='700 50px '+FONT;
+      if(draw){ctx.fillStyle=C.navy;ctx.textBaseline='top';ctx.fillText(title.join('    '),M,y)}
+      y+=66;if(draw){ctx.fillStyle=C.amber;ctx.fillRect(M,y,W-2*M,5)}y+=GAP;
+    }
+    // Crew + duty fields
+    var crews=data.crews;
+    if(o.crew&&crews.length){
+      var cw=800,cy=y;
+      crews.forEach(function(c){cy+=blit(ctx,c,M,cy,cw,draw)+8});
+      var rx=M+cw+30,rw=W-M-rx,fy=y;
+      if(data.duty.length){var fh=Math.max(170,Math.floor((cy-y)/data.duty.length));data.duty.forEach(function(l){field(ctx,l,rx,fy,rw,fh,draw);fy+=fh})}
+      y=Math.max(cy,fy)+GAP;
+    } else if(data.duty.length){
+      data.duty.forEach(function(l){field(ctx,l,M,y,W-2*M,170,draw);y+=170});y+=GAP/2;
+    }
+    // Sectors, with an aircraft header whenever the aircraft changes
+    var flights=data.flights,n=Math.max(flights.length,fpls.length),seen={},prevAc=-1;
+    for(var k=0;k<n;k++){
+      var fl=flights[k],f=fpls[k]&&!fpls[k].bad?fpls[k]:null;
+      var ac=fl?fl.ac:(f&&f.reg?'reg:'+f.reg:'x'+k);
+      if(fl&&fl.reg) data.acReg[ac]=fl.reg;
+      if(ac!==prevAc){
+        var reg=data.acReg[ac]||'', first=!seen[ac];
+        var name=(reg||'Aircraft (registration not read)')+(first?'':'   again');
+        if(draw){ctx.fillStyle=C.navy;ctx.fillRect(M,y,W-2*M,64);ctx.fillStyle='#fff';ctx.font='700 38px '+FONT;ctx.textBaseline='middle';ctx.fillText(name,M+20,y+33)}
+        y+=64+18;
+        if(first){data.ac.forEach(function(l){field(ctx,l,M,y,W-2*M,180,draw);y+=180});y+=8}
+        seen[ac]=true;prevAc=ac;
+      } else {
+        if(draw){ctx.fillStyle=C.rule;ctx.fillRect(M,y,W-2*M,3)}y+=GAP;
+      }
+      var sy=y,ly=y,lw=700;
+      if(fl){
+        ly+=blit(ctx,fl.card,M,ly,lw,draw);
+        if(fl.times) ly+=6+blit(ctx,fl.times,M,ly+6,lw*0.88,draw);
+        fl.pax.forEach(function(pc){ly+=8+blit(ctx,pc,M,ly+8,lw,draw)});
+      }
+      var sec=data.sec.slice(),rx=M+lw+30,rw=W-M-rx,fy2=sy;
+      if(fl){
+        var colH=ly-sy,FH=150;
+        while(sec.length&&fy2+FH<=sy+colH+40){field(ctx,sec[0],rx,fy2,rw,FH,draw);fy2+=FH;sec.shift()}
+        if(fy2<sy+colH&&fy2>sy){/* stretch nothing; leave */}
+      }
+      y=Math.max(ly,fy2)+18;
+      // remaining fields full width, 2 per row
+      var colW=(W-2*M-30)/2;
+      for(var i=0;i<sec.length;i+=2){
+        var single=i===sec.length-1;
+        field(ctx,sec[i],M,y,single?W-2*M:colW,160,draw);
+        if(!single) field(ctx,sec[i+1],M+colW+30,y,colW,160,draw);
+        y+=160;
+      }
+      y+=10;
+      if(f) y=textBlock(ctx,fplLines(f,o),M,y,W-2*M,draw)+8;
+      y+=70;
+    }
+    return y+M;
+  }
+
+  function build(){
+    assignAircraft();renderShots();
+    var fpls=parseAll($('fpl').value);
+    var flights=shots.filter(function(s){return s.kind==='flight'}).map(function(s){var p=paxCanvas(s);return {ac:s.ac,reg:s.reg,card:cardCanvas(s),times:timesCanvas(s),pax:p?[p]:[]}});
+    shots.forEach(function(s){ if(s.kind==='pax'&&flights[s.sector]){var p=paxCanvas(s);if(p) flights[s.sector].pax.push(p)} });
+    var acReg={};
+    fpls.forEach(function(f){if(f&&!f.bad&&f.reg) acReg['reg:'+f.reg]=f.reg});
+    var lines=function(id){return $(id).value.split('\n').map(function(s){return s.trim()}).filter(Boolean)};
+    var data={flights:flights,fpls:fpls,acReg:acReg,
+      crews:$('optCrew').checked?shots.filter(function(s){return s.kind==='crew'}).map(crewCanvas):[],
+      duty:lines('dutyLabels'),ac:lines('acLabels'),sec:lines('secLabels'),
+      opts:{crew:$('optCrew').checked,route:$('optRoute').checked,fir:$('optFir').checked}};
+    if(!flights.length&&!fpls.length){$('out').hidden=false;status('Add at least one screenshot or flight plan first.');return}
+    var c=document.createElement('canvas');c.width=W;c.height=100;
+    var H=render(c.getContext('2d'),false,data);
+    c.height=Math.ceil(H);var ctx=c.getContext('2d');
+    ctx.fillStyle='#FFFFFF';ctx.fillRect(0,0,W,c.height);
+    render(ctx,true,data);
+    c.toBlob(function(blob){
+      currentBlob=blob;var img=$('result');if(img.dataset.url) URL.revokeObjectURL(img.dataset.url);
+      var u=URL.createObjectURL(blob);img.src=u;img.dataset.url=u;$('out').hidden=false;
+      status('Ready. Share it to Notes, or long-press the image and choose Copy, then paste into your Quick Note.');
+      $('out').scrollIntoView({behavior:'smooth',block:'start'});
+    },'image/png');
+  }
+  var currentBlob=null;
+  function status(t){$('status').textContent=t}
+  $('make').addEventListener('click',function(){
+    var go=function(){build()};
+    if(document.fonts&&document.fonts.load) Promise.all([document.fonts.load('700 50px Barlow'),document.fonts.load('600 32px Barlow'),document.fonts.load('500 34px Barlow')]).then(go,go); else go();
+  });
+  $('share').addEventListener('click',function(){
+    if(!currentBlob) return;
+    var file=new File([currentBlob],'duty-note.png',{type:'image/png'});
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})) navigator.share({files:[file],title:'Duty note'}).catch(function(e){if(e&&e.name!=='AbortError')status('Sharing was blocked here. Long-press the image and choose Copy instead.')});
+      else status('Sharing is not available here. Long-press the image and choose Copy or Save to Photos.');
+    }catch(e){status('Sharing is not available here. Long-press the image and choose Copy or Save to Photos.')}
+  });
+  $('copy').addEventListener('click',function(){
+    if(!currentBlob) return;
+    try{navigator.clipboard.write([new ClipboardItem({'image/png':currentBlob})]).then(function(){status('Copied. Paste it into your Quick Note.')},function(){status('Copy was blocked here. Long-press the image and choose Copy instead.')})}
+    catch(e){status('Copy is not available here. Long-press the image and choose Copy instead.')}
+  });
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){})})}
+</script>
+</body>
+</html>
